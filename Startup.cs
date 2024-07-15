@@ -1,6 +1,8 @@
+using GestorMegaTv.Repos;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -27,6 +29,11 @@ namespace Project
             {
                 configuration.RootPath = "ClientApp/build";
             });
+
+            var connection = Configuration["ConexaoMySql:MySqlConnectionString"];
+
+            services.AddDbContext<AppDatabase>(options =>
+            options.UseMySQL(connection));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
