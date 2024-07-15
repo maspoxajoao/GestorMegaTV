@@ -1,4 +1,5 @@
-﻿using GestorMegaTv.Models;
+﻿using GestorMegaTv.Controllers.ReactAdminController;
+using GestorMegaTv.Models;
 using GestorMegaTv.Repos;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,18 +10,11 @@ namespace GestorMegaTv.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class PlayersController : ControllerBase
+    public class PlayersController : ReactAdminController<Player>
     {
-        private readonly AppDatabase _Context;
-
-        public PlayersController(AppDatabase context)
+        public PlayersController(AppDatabase context) : base(context)
         {
-            _Context = context;
-        }
-        [HttpGet]
-        public List<Player> Get()
-        {
-            return _Context.Players.ToList();
+            _table = _context.Players;
         }
     }
 }
