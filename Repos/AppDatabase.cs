@@ -9,6 +9,12 @@ namespace GestorMegaTv.Repos
         {
 
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Midia>().HasQueryFilter(m => m.Excluida != true);
+        }
+
         public DbSet<Player> Players { get; set; }
         public DbSet<Midia> Midias { get; set; }
 
