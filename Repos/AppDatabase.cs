@@ -10,6 +10,7 @@ namespace GestorMegaTv.Repos
 
         }
         public DbSet<Player> Players { get; set; }
+        public DbSet<Midia> Midias { get; set; }
 
 
     }
