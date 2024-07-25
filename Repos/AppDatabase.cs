@@ -13,6 +13,7 @@ namespace GestorMegaTv.Repos
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Campanha>().Navigation(p => p.CampanhaMidias).AutoInclude();
+            modelBuilder.Entity<CampanhaMidia>().Navigation(p => p.Midia).AutoInclude();
 
             modelBuilder.Entity<Midia>().HasQueryFilter(m => m.Excluida != true);
 

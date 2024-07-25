@@ -14,5 +14,9 @@ namespace GestorMegaTv.Models
         public int? MidiaId { get; set; }
         [Column("MIDIACAMPANHA_POSICAO")]
         public int? Posicao { get; set; }
+        [Column("MIDIA_CAMPANHA_DURACAO")]
+        public int? Duracao { get; set; }
+
+        public Midia Midia { get; set; }
     }
 }
