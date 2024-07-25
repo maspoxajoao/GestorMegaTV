@@ -42,7 +42,6 @@ namespace GestorMegaTv.Repos
         public DbSet<Agendamento> AgendamentoCampanhas { get; set; }
         public DbSet<Descricaocampanha> Descricaocampanhas { get; set; }
         public DbSet<Descricaomidia> Descricaomidias { get; set; }
-        public DbSet<NewRelatorioMidia> NewRelatorioMidias { get; set; }
         public DbSet<Pagamento> Pagamentos { get; set; }
         public DbSet<RelatorioSenha> RelatorioSenhas { get; set; }
         public DbSet<TipoClima> TipoClimas { get; set; }
