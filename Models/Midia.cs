@@ -32,5 +32,8 @@ namespace GestorMegaTv.Models
         [Column("MIDIA_EXCLUIDA")]
         public bool? Excluida { get; set; }
 
+        [Column("MIDIA_ARQUIVO")]
+        public string Arquivo { get; set; }
+
     }
 }

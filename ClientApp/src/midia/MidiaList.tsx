@@ -24,7 +24,19 @@ export const MidiaList = () => (
   <List filters={filters}>
     <Datagrid>
       <TextField source="id" label="ID" />
-      <ImageField source="imagemUrl" label="Imagem" />
+      <FunctionField
+        render={(r: any) =>
+          r.tipo === "I" ? (
+            <ImageField source="imagemUrl" label="Imagem" />
+          ) : r.tipo === "V" ? (
+            <video width="320" height="240" controls>
+              <source src={r.imagemUrl} type="video/mp4" />
+            </video>
+          ) : (
+            <ImageField source="arquivo" label="RSS" />
+          )
+        }
+      />
       <TextField source="descricao" label="Descrição" />
       <TextField source="duracao" label="Duração" />
       <SelectField source="tipo" label="Tipo" choices={tipos} />
