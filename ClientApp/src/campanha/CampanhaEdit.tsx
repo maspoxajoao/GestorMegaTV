@@ -25,9 +25,13 @@ import {
   useRecordContext,
   useRefresh,
   useNotify,
+  useUpdate,
 } from "react-admin";
 import { tipos } from "../midia";
 import { Grid, Box } from "@mui/material";
+import { MidiaThumbnail } from "../midia/MidiaThumbnail";
+import { ICampanhaMidia } from "./ICampanhaMidia";
+import { IMidia } from "../midia/IMidia";
 
 const MyBox = ({ children }: any) => {
   return (
@@ -53,7 +57,7 @@ const filters = [
   <SelectInput choices={tipos} source="tipo" alwaysOn />,
 ];
 
-const PostBulkActionButtons = () => {
+const MidiasBulkActionButtons = () => {
   const refresh = useRefresh();
   const record = useRecordContext();
   const { selectedIds } = useListContext();
@@ -75,16 +79,52 @@ const PostBulkActionButtons = () => {
               },
             }
           );
-          // console.log(selectedIds);
-          // fetch("api/campanhamidias/add", {
-          //   method: "POST",
-          //   headers: {
-          //     "Content-type": "application/json",
-          //   },
-          //   body: JSON.stringify(selectedIds),
-          // });
         }}
       />
+    </Box>
+  );
+};
+
+const CampanhaMidiasBulkActionButtons = () => {
+  return (
+    <>
+      <BulkDeleteButton />
+    </>
+  );
+};
+
+const MoveButtons = ({ record }: any) => {
+  const [update] = useUpdate();
+  const refresh = useRefresh();
+
+  const moveCima = () => {
+    update(
+      `campanhamidias/mover/cima`,
+      { id: record.id, data: {} },
+      {
+        onSuccess: () => {
+          refresh();
+        },
+      }
+    );
+  };
+
+  const moveBaixo = () => {
+    update(
+      `campanhamidias/mover/baixo`,
+      { id: record.id, data: {} },
+      {
+        onSuccess: () => {
+          refresh();
+        },
+      }
+    );
+  };
+
+  return (
+    <Box display="flex" flexDirection="column">
+      <Button label="Para Cima" onClick={moveCima} />
+      <Button label="Para Baixo" onClick={moveBaixo} />
     </Box>
   );
 };
@@ -99,19 +139,9 @@ export const CampanhaEdit = () => (
         <Grid item xs={6}>
           <MyBox>
             <InfiniteList resource="midias" filters={filters}>
-              <Datagrid bulkActionButtons={<PostBulkActionButtons />}>
+              <Datagrid bulkActionButtons={<MidiasBulkActionButtons />}>
                 <FunctionField
-                  render={(r: any) =>
-                    r.tipo === "I" ? (
-                      <ImageField source="imagemUrl" label="Imagem" />
-                    ) : r.tipo === "V" ? (
-                      <video width="256" height="192" controls>
-                        <source src={r.imagemUrl} type="video/mp4" />
-                      </video>
-                    ) : (
-                      <ImageField source="arquivo" label="RSS" />
-                    )
-                  }
+                  render={(r: IMidia) => <MidiaThumbnail midia={r} />}
                 />
                 <TextField source="descricao" label="Mídia" />
                 <NumberField source="duracao" label="Duração" />
@@ -130,22 +160,17 @@ export const CampanhaEdit = () => (
             >
               <Datagrid sx={{ pt: "48px" }}>
                 <FunctionField
-                  render={(r: any) =>
-                    r.midia.tipo === "I" ? (
-                      <ImageField source="midia.imagemUrl" label="Imagem" />
-                    ) : r.midia.tipo === "V" ? (
-                      <video width="256" height="192" controls>
-                        <source src={r.midia.imagemUrl} type="video/mp4" />
-                      </video>
-                    ) : (
-                      <ImageField source="midia.arquivo" label="RSS" />
-                    )
-                  }
+                  render={(r: ICampanhaMidia) => (
+                    <MidiaThumbnail midia={r.midia} />
+                  )}
                 />
                 <TextField source="midia.descricao" label="Mídia" />
                 <TextField source="posicao" />
                 <NumberField source="duracao" label="Duração" />
                 <SelectField choices={tipos} source="midia.tipo" label="Tipo" />
+                <FunctionField
+                  render={(record: any) => <MoveButtons record={record} />}
+                />
               </Datagrid>
             </ReferenceManyField>
           </MyBox>
