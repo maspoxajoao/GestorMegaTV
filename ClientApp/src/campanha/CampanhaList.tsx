@@ -13,6 +13,7 @@ export const CampanhaList = () => {
       <Datagrid>
         <TextField source="id" />
         <TextField source="descricao" />
+        <FunctionField render={r=>r.campanhaMidias.length} label="Mídias"/>
       </Datagrid>
     </List>
   );

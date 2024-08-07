@@ -4,7 +4,7 @@ using GestorMegaTv.Repos;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Linq.Dynamic.Core;
-using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
 
 namespace GestorMegaTv.Controllers
 {
@@ -20,7 +20,9 @@ namespace GestorMegaTv.Controllers
         [HttpPost("add/{campanhaId}")]
         public ActionResult AddCampanhaMidias([FromBody] int[] midiaIds, [FromRoute] int campanhaId)
         {
-            var ultimaPosicao = _context.CampanhaMidias.Where(c => c.CampanhaId == campanhaId).Max(c => c.Posicao) + 1;
+            var ultimaPosicao = _context.CampanhaMidias
+                .Where(c => c.CampanhaId == campanhaId)
+                .Max(c => c.Posicao) + 1;
             if (ultimaPosicao == null) ultimaPosicao = 0;
             CampanhaMidia novaCampanhaMidia = null;
             foreach (var midiaId in midiaIds)
@@ -38,67 +40,82 @@ namespace GestorMegaTv.Controllers
             return Ok(novaCampanhaMidia);
         }
 
-        [HttpPut("MoveCima/{id}")]
-        public ActionResult MoveCima(int id)
+        [HttpPost("mover/{direcao}")]
+        public ActionResult MoverMidias([FromRoute] string direcao, [FromBody] int[] ids)
         {
-            var midiaAtual = _context.CampanhaMidias.Find(id);
-            if (midiaAtual == null) return NotFound();
-
-            return Ok(midiaAtual);
-
-        }
-
-        [HttpPut("mover/{direcao}/{id}")]
-        public ActionResult MoveBaixo(string direcao, int id)
-        {
-            var midiaAtual = _context.CampanhaMidias.Find(id);
-
-            if (midiaAtual == null) return NotFound();
-
-            if (direcao == "cima")
+            // pega as midias da campanha que estao sendo movidas
+            var midiasCampanhaMovidas = _context.CampanhaMidias.Where(cm => ids.Contains(cm.Id)).OrderBy(cm => cm.Posicao).ToList();
+            if (!midiasCampanhaMovidas.Any())
             {
-
-                var midiaAnterior = _context.CampanhaMidias
-                    .Where(c => c.CampanhaId == midiaAtual.CampanhaId && c.Posicao < midiaAtual.Posicao)
-                    .OrderByDescending(c => c.Posicao)
-                    .FirstOrDefault();
-                if (midiaAnterior == null) return BadRequest("Já está na posição");
-
-                var temPos = midiaAtual.Posicao;
-                midiaAtual.Posicao = midiaAnterior.Posicao;
-                midiaAnterior.Posicao = temPos;
-
-                _context.SaveChanges();
-
+                return BadRequest("Nenhuma mídia encontrada para os IDs fornecidos.");
             }
-            else if (direcao == "baixo")
+
+            // pega as midias restantes na campanha
+            var midiasRestantesDaCampanha = _context.CampanhaMidias.Where(c => c.CampanhaId == midiasCampanhaMovidas.First().CampanhaId && !ids.Contains(c.Id)).OrderBy(cm => cm.Posicao).ToList();
+
+            // total de mídias na campanha
+            var totalMidiasCampanha = _context.CampanhaMidias.Count(c => c.CampanhaId == midiasCampanhaMovidas.First().CampanhaId);
+
+            // array para guardar as novas posiçoes das midias
+            CampanhaMidia[] novaListaCampanha = new CampanhaMidia[totalMidiasCampanha];
+
+            foreach (var midia in midiasCampanhaMovidas)
             {
+                int novaPosicao;
+                if (direcao == "cima")
+                {
+                    novaPosicao = midia.Posicao.Value - 1 >= 0 ? midia.Posicao.Value - 1 : 0;
+                }
+                else if (direcao == "baixo")
+                {
+                    novaPosicao = midia.Posicao.Value + 1 < totalMidiasCampanha ? midia.Posicao.Value + 1 : midia.Posicao.Value;
+                }
+                else
+                {
+                    return BadRequest("Direção inválida. Use 'cima' ou 'baixo'.");
+                }
 
-                var proximaMidia = _context.CampanhaMidias
-                   .Where(c =>
-                   c.CampanhaId == midiaAtual.CampanhaId
-                   && c.Posicao > midiaAtual.Posicao
-                   )
-                   .OrderBy(c => c.Posicao)
-                   .FirstOrDefault();
-                if (proximaMidia == null) return BadRequest("Já na posição");
+                // ajustar a posiçao se ja estiver ocupada
+                while (novaPosicao+1 < novaListaCampanha.Length && novaListaCampanha[novaPosicao] != null)
+                {
+                        novaPosicao++;
+                }
 
-                var temPos = midiaAtual.Posicao;
-                midiaAtual.Posicao = proximaMidia.Posicao;
-                proximaMidia.Posicao = temPos;
+                midia.Posicao = novaPosicao;
+                novaListaCampanha[novaPosicao] = midia;
+            }
+
+            int posicao = 0;
+            foreach (var campanhaMidia in midiasRestantesDaCampanha)
+            {
+                while (novaListaCampanha[posicao] != null)
+                {
+                    if (posicao + 1 >= novaListaCampanha.Length)
+                        posicao = 0;
+                    else
+                        posicao++;
+                }
+                campanhaMidia.Posicao = posicao;
+                novaListaCampanha[posicao] = campanhaMidia;
             }
 
             _context.SaveChanges();
-            AtualizarPosicoes(midiaAtual.CampanhaId.Value);
 
-            return Ok(midiaAtual);
+
+
+            AtualizarPosicoes(midiasCampanhaMovidas.First().CampanhaId.Value);
+
+            return Ok(midiasCampanhaMovidas);
         }
 
         public void AtualizarPosicoes(int campanhaId)
         {
-            var midiasCampanha = _context.CampanhaMidias.Where(c => c.CampanhaId == campanhaId).OrderBy(c=>c.Posicao).ToList();
+            var midiasCampanha = _context.CampanhaMidias
+                .Where(c => c.CampanhaId == campanhaId)
+                .OrderBy(c => c.Posicao)
+                .ToList();
             int index = 0;
-            foreach(var midiaCampanha in midiasCampanha)
+            foreach (var midiaCampanha in midiasCampanha)
             {
                 midiaCampanha.Posicao = index;
                 index++;

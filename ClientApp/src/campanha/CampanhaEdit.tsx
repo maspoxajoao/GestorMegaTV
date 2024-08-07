@@ -26,6 +26,8 @@ import {
   useRefresh,
   useNotify,
   useUpdate,
+  EditButton,
+  DateField,
 } from "react-admin";
 import { tipos } from "../midia";
 import { Grid, Box } from "@mui/material";
@@ -43,8 +45,6 @@ const MyBox = ({ children }: any) => {
         height: 600,
         overflow: "hidden",
         overflowY: "scroll",
-
-        // justifyContent="flex-end" # DO NOT USE THIS WITH 'scroll'
       }}
     >
       {children}
@@ -63,7 +63,6 @@ const MidiasBulkActionButtons = () => {
   const { selectedIds } = useListContext();
   const [create] = useCreate();
   const notify = useNotify();
-  console.log(record);
   return (
     <Box>
       <Button
@@ -85,47 +84,33 @@ const MidiasBulkActionButtons = () => {
   );
 };
 
+const MoveButtons = ({ label, direcao }: { label: string; direcao: string }) => {
+  const [create] = useCreate();
+  const refresh = useRefresh();
+  const { selectedIds } = useListContext();
+
+  const mover = (direcao: string) => {
+    create(
+      `campanhamidias/mover/${direcao}`,
+      { data: selectedIds },
+      {
+        onSuccess: () => {
+          refresh();
+        },
+      }
+    );
+  };
+
+  return <Button label={label} onClick={() => mover(direcao)} />;
+};
+
 const CampanhaMidiasBulkActionButtons = () => {
   return (
     <>
+      <MoveButtons label="Para cima" direcao="cima" />
+      <MoveButtons label="Para baixo" direcao="baixo" />
       <BulkDeleteButton />
     </>
-  );
-};
-
-const MoveButtons = ({ record }: any) => {
-  const [update] = useUpdate();
-  const refresh = useRefresh();
-
-  const moveCima = () => {
-    update(
-      `campanhamidias/mover/cima`,
-      { id: record.id, data: {} },
-      {
-        onSuccess: () => {
-          refresh();
-        },
-      }
-    );
-  };
-
-  const moveBaixo = () => {
-    update(
-      `campanhamidias/mover/baixo`,
-      { id: record.id, data: {} },
-      {
-        onSuccess: () => {
-          refresh();
-        },
-      }
-    );
-  };
-
-  return (
-    <Box display="flex" flexDirection="column">
-      <Button label="Para Cima" onClick={moveCima} />
-      <Button label="Para Baixo" onClick={moveBaixo} />
-    </Box>
   );
 };
 
@@ -136,7 +121,7 @@ export const CampanhaEdit = () => (
         <Grid item xs={12}>
           <TextInput source="descricao" label="Descrição" />
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={4}>
           <MyBox>
             <InfiniteList resource="midias" filters={filters}>
               <Datagrid bulkActionButtons={<MidiasBulkActionButtons />}>
@@ -144,21 +129,23 @@ export const CampanhaEdit = () => (
                   render={(r: IMidia) => <MidiaThumbnail midia={r} />}
                 />
                 <TextField source="descricao" label="Mídia" />
-                <NumberField source="duracao" label="Duração" />
                 <SelectField choices={tipos} source="tipo" label="Tipo" />
               </Datagrid>
             </InfiniteList>
           </MyBox>
         </Grid>
-        <Grid item xs={6}>
+        <Grid item xs={8}>
           <MyBox>
             <ReferenceManyField
               reference="campanhaMidias"
               target="campanhaId"
-              label="Books"
+              label="Mídias da Campanha"
               sort={{ field: "posicao", order: "ASC" }}
             >
-              <Datagrid sx={{ pt: "48px" }}>
+              <Datagrid
+                sx={{ pt: "48px" }}
+                bulkActionButtons={<CampanhaMidiasBulkActionButtons />}
+              >
                 <FunctionField
                   render={(r: ICampanhaMidia) => (
                     <MidiaThumbnail midia={r.midia} />
@@ -168,9 +155,9 @@ export const CampanhaEdit = () => (
                 <TextField source="posicao" />
                 <NumberField source="duracao" label="Duração" />
                 <SelectField choices={tipos} source="midia.tipo" label="Tipo" />
-                <FunctionField
-                  render={(record: any) => <MoveButtons record={record} />}
-                />
+                <DateField source="dataInicio" label="Início"/>
+                <DateField source="dataFim" label="Fim"/>
+                <EditButton />
               </Datagrid>
             </ReferenceManyField>
           </MyBox>
